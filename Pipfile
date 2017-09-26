@@ -9,6 +9,7 @@ requests = "*"
 pexpect = "*"
 click-completion = "*"
 blindspin = "*"
+ipython = "*"
 
 
 [dev-packages]

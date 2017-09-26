@@ -10,10 +10,10 @@ import click_completion
 import crayons
 import pexpect
 import requests
+import subprocess
 
 #from .__version__ import __version__
 from blindspin import spinner
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 
 def format_help(help):
@@ -30,27 +30,19 @@ def format_help(help):
 
     additional_help = """
 Usage Examples:
-   Create a new project using Python 3:
+   A:
    $ {0}
 
-   Create a new project using Python 3.6, specifically:
+   B:
    $ {1}
 
-   Install all dependencies for a project (including dev):
+   C:
    $ {2}
 
-   Create a lockfile:
-   $ {3}
-
-   Show a graph of your installed dependencies:
-   $ {4}
-
 Commands:""".format(
-        crayons.red('froot --three'),
-        crayons.red('froot --python 3.6'),
+        crayons.red('froot --A'),
+        crayons.red('froot --X'),
         crayons.red('froot install --dev'),
-        crayons.red('froot lock'),
-        crayons.red('froot graph')
     )
 
     help = help.replace('Commands:', additional_help)
@@ -58,25 +50,57 @@ Commands:""".format(
     return help
 
 
-@click.command(help="Installs provided apps.", context_settings=dict(
+@click.command(help="Installs app on the device.", context_settings=dict(
     ignore_unknown_options=True,
     allow_extra_args=True
 ))
-@click.argument('package_name', default=False)
+@click.argument('package', default=False)
+@click.option('--device', default=None, help="Specify which device to get shell in")
 @click.option('--verbose', is_flag=True, default=False, help="Verbose mode.")
-def install(
-        package_name=False, verbose=False):
+def install(package=None, device=None, verbose=False):
+    name = os.path.basename(package)
+    print(str(crayons.green('Installing package: {}'.format(name))))
+    dev = ""
+    if device:
+        dev = "-s {device}".format(device=device)
 
-    print("Install")
+    command = "adb {extra} install {package}".format(extra=dev, package=package).split()
+    res = subprocess_with_output(command)
+    ret_msg = res.splitlines()[-1]
+    if 'Success' in ret_msg:
+        print(str(crayons.yellow('Package was installed', bold=True)))
+    else:
+        print(str(crayons.red('Unable to install package: {}'.format(ret_msg), bold=True)))
+
 
 @click.command(help="Spawn a shell on the device.", context_settings=dict(
     ignore_unknown_options=True,
     allow_extra_args=True
 ))
-@click.option('--verbose', is_flag=True, default=False, help="Verbose mode.")
-def shell(verbose=False):
+@click.option('--device', help="Specify which device to get shell in")
+def shell(device):
+    print(str(crayons.green("Attaching to a shell", bold=True)))
+    if device:
+        subprocess.call(["adb", "-s", device, "shell"])
+    else:
+        subprocess.call(["adb", "shell"])
 
-    print("Shell")
+
+def subprocess_with_output(command, newlines=True):
+    with spinner():
+        return subprocess.check_output(command, universal_newlines=newlines)
+
+
+@click.command(help="List attached devices.", context_settings=dict(
+    ignore_unknown_options=True,
+    allow_extra_args=True
+))
+@click.option('--verbose', is_flag=True, default=False, help="Verbose mode.")
+def devices(verbose=False):
+    output = subprocess_with_output(["adb", "devices"])
+    for line in output.splitlines()[1:]:
+        print(line.split('\t')[0])
+
 
 @click.command(help="Root a running device.", context_settings=dict(
     ignore_unknown_options=True,
@@ -86,7 +110,7 @@ def shell(verbose=False):
 def root(
         package_name=False, verbose=False):
 
-    print("Root")
+    print(str(crayons.red('Not implemented yet')))
 
 
 @click.group(invoke_without_command=True)
@@ -106,6 +130,7 @@ def cli(
 cli.add_command(install)
 cli.add_command(root)
 cli.add_command(shell)
+cli.add_command(devices)
 
 if __name__ == '__main__':
     cli()
