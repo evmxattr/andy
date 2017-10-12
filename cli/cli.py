@@ -100,15 +100,14 @@ def shell(device):
 
 #####
 def get_packages(device=None):
-    packages = []
+    packages = {}
     res = subprocess_with_output(
         ['adb', 'shell', 'pm', 'list', 'packages', '-f'])
     for package in res.splitlines():
         info = package.replace('package:', '').split('=')
         if '.apk' in info[0]:
-            packages.append(info)
+            packages[info[1]] = info[0]
     return packages
-
 #####
 
 
@@ -119,8 +118,8 @@ def get_packages(device=None):
 @click.option('--device', help="Specify which device to attach to")
 def packages(device):
     print(str(crayons.green("Installed packages", bold=True)))
-    for package in get_packages():
-        print('Package: {} :: Location: {}'.format(package[1], package[0]))
+    for package, Location in get_packages(device).items():
+        print('Package: {} : Location: {}'.format(package, Location))
 
 
 @click.command(help="Pull apk from device.", context_settings=dict(
@@ -134,11 +133,10 @@ def packages(device):
 def pull(arg, dest, device, package):
     print(str(crayons.green("Pull from device", bold=True)))
     if package:
-        packages = get_packages(device)
-        for package in packages:
-            if arg in package[1]:
-                print(crayons.green('Found a match: %s' % package[1]))
-                arg = package[0]
+        for package, Location in get_packages(device).items():
+            if arg in package:
+                print(crayons.green('Found a match: %s' % package))
+                arg = Location
                 print(arg)
     try:
         # TODO: Specific device
