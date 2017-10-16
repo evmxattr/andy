@@ -4,6 +4,7 @@ import sys
 import shutil
 import time
 import tempfile
+import shutil
 
 import click
 import click_completion
@@ -12,8 +13,9 @@ import pexpect
 import requests
 import subprocess
 
-#from .__version__ import __version__
 from blindspin import spinner
+from . import commands
+from .__version__ import __version__
 
 
 splash = """
@@ -68,19 +70,14 @@ Commands:""".format(
 @click.option('--verbose', is_flag=True, default=False, help="Verbose mode.")
 def install(package=None, device=None, verbose=False):
     name = os.path.basename(package)
-    print(str(crayons.green('Installing package: {}'.format(name))))
-    cmd = _adb(device) + 'install %s' % package # -l -r -t -s -d -p -g
-    try:
-        res = subprocess_with_output(cmd.split()).splitlines()[-1]
-    except Exception as e:
-        print(e)
-        pass
+    click.echo('Installing package: {}'.format(
+        click.style(str(name), fg='green')))
+    res = commands.install(package, device)
+    if 'Success' in res:
+        click.echo(str(crayons.yellow('Package has been installed', bold=True)))
     else:
-        if 'Success' in res:
-            print(str(crayons.yellow('Package has been installed', bold=True)))
-        else:
-            print(
-                str(crayons.red('Unable to install package: {}'.format(res), bold=True)))
+        click.echo(
+            str(crayons.red('Unable to install package: {}'.format(res), bold=True)))
 
 
 @click.command(help="Interactive shell.", context_settings=dict(
@@ -89,22 +86,8 @@ def install(package=None, device=None, verbose=False):
 ))
 @click.option('--device', '-d', default=None, help="Specify which device to run the command on.")
 def shell(device):
-    print(str(crayons.green("Attaching to a shell", bold=True)))
-    cmd = _adb(device) + 'shell'
-    subprocess.call(cmd.split())
-
-
-#####
-def get_packages(device=None):
-    packages = {}
-    cmd = _adb(device) + 'shell pm list packages -f'
-    res = subprocess_with_output(cmd.split())
-    for package in res.splitlines():
-        info = package.replace('package:', '').split('=')
-        if '.apk' in info[0]:
-            packages[info[1]] = info[0]
-    return packages
-#####
+    click.echo(str(crayons.green("Attaching to a shell", bold=True)))
+    commands.shell(device)
 
 
 @click.command(help="List installed packages.", context_settings=dict(
@@ -113,12 +96,12 @@ def get_packages(device=None):
 ))
 @click.option('--device', '-d', default=None, help="Specify which device to run the command on.")
 def packages(device):
-    print(str(crayons.green("Installed packages", bold=True)))
+    click.echo(str(crayons.green("Installed packages", bold=True)))
     lines = []
-    for package, location in get_packages(device).items():
-        lines.append('{package}: {location}'.format(package=click.style(str(package), fg='green'), location=location))
+    for package, location in commands.get_packages(device).items():
+        lines.append('{package}: {location}'.format(
+            package=click.style(str(package), fg='green'), location=location))
     click.echo_via_pager('\n'.join(lines))
-
 
 
 @click.command(help="Pull apk from device.", context_settings=dict(
@@ -130,26 +113,21 @@ def packages(device):
 @click.option('--device', '-d', default=None, help="Specify which device to run the command on.")
 @click.option('--package', is_flag=True, default=None,  help="Search for package and pull it")
 def pull(arg, dest, device, package):
-    print(str(crayons.green("Pull from device", bold=True)))
+    click.echo(str(crayons.green("Pull from device", bold=True)))
     if package:
-        for package, Location in get_packages(device).items():
+        for package, location in commands.get_packages(device).items():
             if arg in package:
-                print(crayons.green('Found a match: %s' % package))
-                arg = Location
-                print(arg)
+                click.echo(crayons.green('Found a match: %s' % package))
+                arg = location
+                click.echo(arg)
     try:
         # TODO: Specific device
-        res = subprocess_with_output(['adb', 'pull', arg, dest])
+        res = commands.pull(arg, dest, device)
     except Exception as e:
-        print(crayons.red('Unable to pull file/folder'))
+        click.echo(crayons.red('Unable to pull file/folder'))
     else:
         if 'pulled' in res:
-            print(crayons.green('Pulled %s from device' % arg))
-
-
-def subprocess_with_output(command, newlines=True):
-    with spinner():
-        return subprocess.check_output(command, universal_newlines=newlines)
+            click.echo(crayons.green('Pulled %s from device' % arg))
 
 
 @click.command(help="List attached devices.", context_settings=dict(
@@ -158,10 +136,10 @@ def subprocess_with_output(command, newlines=True):
 ))
 @click.option('--verbose', is_flag=True, default=False, help="Verbose mode.")
 def devices(verbose=False):
-    print(str(crayons.green('Available devices', bold=True)))
-    output = subprocess_with_output(["adb", "devices"])
+    click.echo(str(crayons.green('Available devices', bold=True)))
+    output = commands.devices()
     for line in output.splitlines()[1:]:
-        print(line.split('\t')[0])
+        click.echo(line.split('\t')[0])
 
 
 @click.command(help="Root a running device.", context_settings=dict(
@@ -171,7 +149,7 @@ def devices(verbose=False):
 @click.option('--device', '-d', default=None, help="Specify which device to run the command on.")
 @click.option('--verbose', is_flag=True, default=False, help="Verbose mode.")
 def root(device, verbose=False):
-    print(str(crayons.red('Not implemented yet')))
+    click.echo(str(crayons.red('Not implemented yet')))
 
 
 @click.command(help="Reboot device.", context_settings=dict(
@@ -180,10 +158,7 @@ def root(device, verbose=False):
 ))
 @click.option('--device', '-d', default=None, help="Specify which device to run the command on.")
 def reboot(device):
-    cmd = _adb(device) + "shell ps | grep zygote | awk '{print $2}'"
-    zygote = subprocess.check_output(cmd.split(), universal_newlines=True)
-    cmd = _adb(device) + 'shell kill %s' % zygote
-    subprocess.check_call(cmd.split())
+    commands.reboot(device)
 
 
 @click.command(help="Forward ports.", context_settings=dict(
@@ -194,26 +169,17 @@ def reboot(device):
 @click.argument('remote', default=None)
 @click.option('--device', '-d', default=None, help="Specify which device to run the command on.")
 def forward(local, remote, device):
-    cmd = _adb(device) + "forward tcp:{0} tcp:{1}".format(local, remote)
     try:
-        subprocess.check_call(cmd.split(), universal_newlines=True)
+        commands.forward(local, remote, device)
         click.echo(crayons.white(
             "Forwarded local port {0} to remote port {1}".format(local, remote), bold=True))
-    except:
+    except Exception as e:
         click.echo("Unable to forward ports")
-
-
-def _adb(device=None):
-    import shutil
-    adb = shutil.which('adb')
-    if device:
-        return adb + ' -s %s ' % device
-    return adb + ' '
 
 
 @click.group(invoke_without_command=True)
 @click.option('--help', '-h', is_flag=True, default=None, help="Show this message then exit.")
-@click.version_option(prog_name=crayons.yellow('froot'), version="0.0.1")
+@click.version_option(prog_name=crayons.yellow('froot'), version=__version__)
 @click.pass_context
 def cli(ctx, help=False):
 
