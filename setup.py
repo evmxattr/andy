@@ -22,10 +22,10 @@ required = []
 setup(
     name='rooter',
     version=about['__version__'],
-    description='Blehhhhh.',
+    description='.',
     long_description=long_description,
-    author='Some guy',
-    author_email='me@xxx.com',
+    author='',
+    author_email='x@x.com',
     url='https://github.com/',
     packages=find_packages(exclude=['tests', 'tests_windows']),
     entry_points={
@@ -35,6 +35,6 @@ setup(
     include_package_data=True,
     license='MIT',
     classifiers=[
-        'License :: OSI Approved :: MIT License',
+        'License ::  MIT License',
     ]
 )

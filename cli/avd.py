@@ -37,7 +37,7 @@ def patch_config(device_name):
 
 
 def create(name, codename):
-    command = shutil.which('avdmanager') + ' create avd --force --name %s --device "Nexus 5" --package "%s" --sdcard 100M' % (
+    command = shutil.which('avdmanager') + ' -s create avd --force --name %s --device "Nexus 5" --package "%s" --sdcard 100M' % (
         name, image_paths.get(codename))
     out = check_output(command, shell=True, universal_newlines=True)
     patch_config(name)
@@ -46,11 +46,15 @@ def create(name, codename):
 def list():
     command = shutil.which('avdmanager') + ' list avd'
     out = check_output(command.split(), universal_newlines=True).splitlines()
-    return [n.replace('Name:','').strip() for n in out if 'Name:' in n]
+    return [n.replace('Name:', '').strip() for n in out if 'Name:' in n]
 
 
 def delete():
     print('Delete AVD')
+
+
+def delete():
+    print('Wipe user data from AVD')
 
 
 def run(device_name, proxy):

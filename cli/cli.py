@@ -14,9 +14,14 @@ import requests
 import subprocess
 
 from blindspin import spinner
-from .adb import commands
 from . import avd
+from .adb import commands
 from .__version__ import __version__
+
+proxies = {
+    'privoxy': 'http://127.0.0.1:8118',
+    'mitmproxy': 'http://127.0.0.1:8080'
+}
 
 
 splash = """
@@ -122,7 +127,6 @@ def pull(arg, dest, device, package):
                 arg = location
                 click.echo(arg)
     try:
-        # TODO: Specific device
         res = commands.pull(arg, dest, device)
     except Exception as e:
         click.echo(crayons.red('Unable to pull file/folder'))
@@ -195,23 +199,30 @@ def forward(local, remote, device):
 ))
 @click.argument('name', default=None)
 @click.argument('codename', default='kitkat')
-@click.option('--proxy', '-p', default=None, help="http proxy.")
-def create(name, codename, proxy):
+@click.option('--proxy', '-p', default=proxies['privoxy'], help="http proxy.")
+@click.option('--start', '-s', is_flag=True, default=False, help="Start device after creating it.")
+@click.option('--bootstrap', '-b', is_flag=True, default=False, help="Bootstrap device when ready.")
+def create(name, codename, proxy, start, bootstrap):
     click.echo(crayons.white(
         "Creating new device {0} [{1}]".format(name, codename), bold=True))
     avd.create(name, codename)
+    if start:
+        avd.run(name, proxy)
+        if bootstrap:
+            pass
 
 
-@click.command(help="Start AVD.", context_settings=dict(
+@click.command(name='start', help="Start AVD.", context_settings=dict(
     ignore_unknown_options=True,
     allow_extra_args=True
 ))
 @click.argument('name', default=None)
-@click.option('--proxy', '-p', default='http://127.0.0.1:8118', help="http proxy.")
+@click.option('--proxy', '-p', default=proxies['privoxy'], help="http proxy.")
 def start(name, proxy):
     click.echo(crayons.white(
-        "Starting device {0}".format(name), bold=True))
+        "Starting device %s" % name, bold=True))
     avd.run(name, proxy)
+
 
 @click.command(help="List AVD.", context_settings=dict(
     ignore_unknown_options=True,
@@ -235,7 +246,6 @@ def cli(ctx, help=False):
         click.echo(format_help(ctx.get_help()))
 
 
-# Install click commands.
 cli.add_command(install)
 cli.add_command(root)
 cli.add_command(create)
