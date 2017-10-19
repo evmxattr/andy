@@ -49,8 +49,8 @@ def forward(local, remote, device):
 
 def reboot(device):
     cmd = _adb(device) + "shell ps | grep zygote | awk '{print $2}'"
-    zygote = check_output(cmd.split(), universal_newlines=True)
-    cmd = _adb(device) + 'shell kill %s' % zygote
+    pid = check_output(cmd.split(), universal_newlines=True)
+    cmd = _adb(device) + 'shell kill %s' % pid
     check_call(cmd.split())
 
 
@@ -62,4 +62,4 @@ def devices():
 
 def subprocess_with_output(command, newlines=True):
     with spinner():
-        return subprocess.check_output(command, universal_newlines=newlines)
+        return check_output(command, universal_newlines=newlines)

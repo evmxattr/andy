@@ -14,7 +14,8 @@ import requests
 import subprocess
 
 from blindspin import spinner
-from . import commands
+from .adb import commands
+from . import avd
 from .__version__ import __version__
 
 
@@ -152,6 +153,17 @@ def root(device, verbose=False):
     click.echo(str(crayons.red('Not implemented yet')))
 
 
+@click.command(help="Root a running device.", context_settings=dict(
+    ignore_unknown_options=True,
+    allow_extra_args=True
+))
+@click.option('--device', '-d', default=None, help="Specify which device to run the command on.")
+@click.option('--all', '-a', is_flag=True, default=False, help="Specify which device to run the command on.")
+@click.option('--verbose', is_flag=True, default=False, help="Verbose mode.")
+def bootstrap(device, verbose=False):
+    click.echo(str(crayons.red('Not implemented yet')))
+
+
 @click.command(help="Reboot device.", context_settings=dict(
     ignore_unknown_options=True,
     allow_extra_args=True
@@ -177,6 +189,41 @@ def forward(local, remote, device):
         click.echo("Unable to forward ports")
 
 
+@click.command(help="Create new AVD.", context_settings=dict(
+    ignore_unknown_options=True,
+    allow_extra_args=True
+))
+@click.argument('name', default=None)
+@click.argument('codename', default='kitkat')
+@click.option('--proxy', '-p', default=None, help="http proxy.")
+def create(name, codename, proxy):
+    click.echo(crayons.white(
+        "Creating new device {0} [{1}]".format(name, codename), bold=True))
+    avd.create(name, codename)
+
+
+@click.command(help="Start AVD.", context_settings=dict(
+    ignore_unknown_options=True,
+    allow_extra_args=True
+))
+@click.argument('name', default=None)
+@click.option('--proxy', '-p', default='http://127.0.0.1:8118', help="http proxy.")
+def start(name, proxy):
+    click.echo(crayons.white(
+        "Starting device {0}".format(name), bold=True))
+    avd.run(name, proxy)
+
+@click.command(help="List AVD.", context_settings=dict(
+    ignore_unknown_options=True,
+    allow_extra_args=True
+))
+def avdlist():
+    click.echo(crayons.white(
+        "Available AVD's", bold=True))
+    for dev in avd.list():
+        click.echo(str(crayons.green(dev)))
+
+
 @click.group(invoke_without_command=True)
 @click.option('--help', '-h', is_flag=True, default=None, help="Show this message then exit.")
 @click.version_option(prog_name=crayons.yellow('froot'), version=__version__)
@@ -191,7 +238,11 @@ def cli(ctx, help=False):
 # Install click commands.
 cli.add_command(install)
 cli.add_command(root)
+cli.add_command(create)
+cli.add_command(start)
+cli.add_command(avdlist)
 cli.add_command(shell)
+cli.add_command(bootstrap)
 cli.add_command(devices)
 cli.add_command(reboot)
 cli.add_command(packages)
