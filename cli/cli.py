@@ -33,15 +33,21 @@ def format_help(help):
     """Formats the help string."""
     help = help.replace('Options:', str(crayons.white('Options:', bold=True)))
 
-    help = help.replace('Usage: froot', str(
-        'Usage: {0}'.format(crayons.white('froot', bold=True))))
+    help = help.replace('Usage: rooter', str(
+        'Usage: {0}'.format(crayons.white('rooter', bold=True))))
 
-    help = help.replace('  install', str(
-        crayons.yellow('  install', bold=True)))
+    help = help.replace('  install', str(crayons.yellow('  install', bold=True)))
     help = help.replace('  root', str(crayons.red('  root', bold=True)))
-    help = help.replace('  shell', str(crayons.blue('  shell', bold=True)))
-    help = help.replace('  pull', str(crayons.green('  pull', bold=True)))
+    help = help.replace('  create', str(crayons.blue('  create', bold=True)))
+    help = help.replace('  start', str(crayons.green('  start', bold=True)))
+    help = help.replace('  shell', str(crayons.yellow('  shell', bold=True)))
+    help = help.replace('  avdlist', str(crayons.red('  avdlist', bold=True)))
+    help = help.replace('  bootstrap', str(crayons.blue('  bootstrap', bold=True)))
+    help = help.replace('  devices', str(crayons.green('  devices', bold=True)))
     help = help.replace('  reboot', str(crayons.yellow('  reboot', bold=True)))
+    help = help.replace('  packages', str(crayons.red('  packages', bold=True)))
+    help = help.replace('  pull', str(crayons.blue('  pull', bold=True)))
+    help = help.replace('  forward', str(crayons.green('  forward', bold=True)))
 
     additional_help = """
 Usage Examples:
@@ -50,7 +56,7 @@ Usage Examples:
 
 
 Commands:""".format(
-        crayons.red('froot --A'),
+        crayons.red(''),
     )
 
     help = help.replace('Commands:', additional_help)
@@ -228,7 +234,7 @@ def avdlist():
 
 @click.group(invoke_without_command=True)
 @click.option('--help', '-h', is_flag=True, default=None, help="Show this message then exit.")
-@click.version_option(prog_name=crayons.yellow('froot'), version=__version__)
+@click.version_option(prog_name=crayons.yellow('rooter'), version=__version__)
 @click.pass_context
 def cli(ctx, help=False):
 
