@@ -15,7 +15,9 @@ import subprocess
 
 from blindspin import spinner
 from . import avd
+from . import root as rooter
 from .adb import commands
+
 from .__version__ import __version__
 
 proxies = {
@@ -151,7 +153,7 @@ def devices(verbose=False):
 @click.option('--device', '-d', default=None, help="Specify which device to run the command on.")
 @click.option('--verbose', is_flag=True, default=False, help="Verbose mode.")
 def root(device, verbose=False):
-    click.echo(str(crayons.red('Not implemented yet')))
+    rooter.root(device)
 
 
 @click.command(help="Root a running device.", context_settings=dict(
@@ -198,15 +200,19 @@ def forward(local, remote, device):
 @click.argument('codename', default='kitkat')
 @click.option('--proxy', '-p', default=proxies['privoxy'], help="http proxy.")
 @click.option('--start', '-s', is_flag=True, default=False, help="Start device after creating it.")
+@click.option('--root', '-r', is_flag=True, default=False, help="Root device when ready.")
 @click.option('--bootstrap', '-b', is_flag=True, default=False, help="Bootstrap device when ready.")
-def create(name, codename, proxy, start, bootstrap):
+def create(name, codename, proxy, start, root, bootstrap):
     click.echo(crayons.white(
         "Creating new device {0} [{1}]".format(name, codename), bold=True))
     avd.create(name, codename)
     if start:
         avd.run(name, proxy)
+        if root:
+            rooter.root_device()
         if bootstrap:
             pass
+
 
 
 @click.command(name='start', help="Start AVD.", context_settings=dict(

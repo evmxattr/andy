@@ -2,7 +2,7 @@ import shutil
 from subprocess import check_call, check_output
 
 
-def _adb(device=None):
+def adb(device=None):
     adb = shutil.which('adb')
     if device:
         return adb + ' -s %s ' % device
@@ -10,12 +10,12 @@ def _adb(device=None):
 
 
 def shell(device):
-    cmd = _adb(device) + 'shell'
+    cmd = adb(device) + 'shell'
     check_call(cmd.split())
 
 
 def install(package, device=None, *args, **kwargs):
-    cmd = _adb(device) + 'install %s' % package  # -l -r -t -s -d -p -g
+    cmd = adb(device) + 'install %s' % package  # -l -r -t -s -d -p -g
     try:
         res = check_output(
             cmd.split(), universal_newlines=True).splitlines()[-1]
@@ -26,14 +26,20 @@ def install(package, device=None, *args, **kwargs):
 
 
 def pull(source, dest, device):
-    cmd = _adb(device) + "pull {0} {1}".format(source, dest)
+    cmd = adb(device) + "pull {0} {1}".format(source, dest)
+    res = check_output(cmd.split(), universal_newlines=True)
+    return res
+
+
+def push(source, dest, device):
+    cmd = adb(device) + "push {0} {1}".format(source, dest)
     res = check_output(cmd.split(), universal_newlines=True)
     return res
 
 
 def get_packages(device=None):
     packages = {}
-    cmd = _adb(device) + 'shell pm list packages -f'
+    cmd = adb(device) + 'shell pm list packages -f'
     res = check_output(cmd.split(), universal_newlines=True)
     for package in res.splitlines():
         info = package.replace('package:', '').split('=')
@@ -43,21 +49,42 @@ def get_packages(device=None):
 
 
 def forward(local, remote, device):
-    cmd = _adb(device) + "forward tcp:{0} tcp:{1}".format(local, remote)
+    cmd = adb(device) + "forward tcp:{0} tcp:{1}".format(local, remote)
     check_call(cmd.split())
 
 
 def reboot(device):
-    cmd = _adb(device) + "shell ps | grep zygote | awk '{print $2}'"
-    pid = check_output(cmd.split(), universal_newlines=True)
-    cmd = _adb(device) + 'shell kill %s' % pid
+    cmd = adb(device) + "shell ps | grep zygote | awk '{print $2}'"
+    pid = check_output(cmd, universal_newlines=True, shell=True)
+    cmd = adb(device) + 'shell kill %s' % pid
     check_call(cmd.split())
 
 
 def devices():
-    cmd = _adb(None) + "devices"
+    cmd = adb(None) + "devices"
     output = check_output(cmd.split(), universal_newlines=True)
     return output
+
+
+def wait_for_device(device=None):
+    import time
+    check_output(adb(device) + 'wait-for-device', shell=True)
+
+    while True:
+        out = check_output(
+            adb(device) + 'shell getprop sys.boot_completed', shell=True)
+        if '1' in str(out):
+            break
+        time.sleep(1)
+
+    while True:
+        try:
+            if check_output(adb(device) + 'shell ps | grep android.process.acore', shell=True):
+                break
+        except:
+            time.sleep(1)
+    time.sleep(2)
+    print('Device is ready')
 
 
 def subprocess_with_output(command, newlines=True):
