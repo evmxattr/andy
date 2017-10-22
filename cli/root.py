@@ -9,7 +9,7 @@ def root_device(device=None):
     commands.wait_for_device()
     check_call(commands.adb(device) + 'root', universal_newlines=True, shell=True)
     check_call(commands.adb(device) + 'remount', universal_newlines=True, shell=True)
-    commands.push(os.path.join(os.path.expanduser('~/.stuff'), 'binaries/su.pie'), '/system/xbin/su', device)
+    commands.push(os.path.join(os.path.expanduser('~/.stuff'), 'binaries/su/x86/su.pie'), '/system/xbin/su', device)
     check_call(commands.adb(device) + 'shell chmod 0755 /system/xbin/su', universal_newlines=True, shell=True)
     check_call(commands.adb(device) + 'shell su --install', universal_newlines=True, shell=True)
     check_call(commands.adb(device) + 'shell su --daemon&', universal_newlines=True, shell=True)
@@ -18,4 +18,6 @@ def root_device(device=None):
 
 
 def bootstrap(device=None):
-    pass
+    commands.push(os.path.join(os.path.expanduser('~/.stuff'), 'binaries/busybox/x86/busybox'), '/system/xbin/', device)
+    check_call(commands.adb(device) + 'shell chmod 0755 /system/xbin/busybox', universal_newlines=True, shell=True)
+    check_call(commands.adb(device) + 'shell "cd /system/xbin/ && busybox --install /system/xbin/"', universal_newlines=True, shell=True)

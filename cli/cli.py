@@ -163,9 +163,9 @@ def root(device, verbose=False):
 @click.option('--device', '-d', default=None, help="Specify which device to run the command on.")
 @click.option('--all', '-a', is_flag=True, default=False, help="Specify which device to run the command on.")
 @click.option('--verbose', is_flag=True, default=False, help="Verbose mode.")
-def bootstrap(device, verbose=False):
-    click.echo(str(crayons.red('Not implemented yet')))
-
+def bootstrap(device, all, verbose=False):
+    click.echo(str(crayons.white('Bootstrapping device', bold=True)))
+    rooter.bootstrap()
 
 @click.command(help="Reboot device.", context_settings=dict(
     ignore_unknown_options=True,
