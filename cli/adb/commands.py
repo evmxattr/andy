@@ -83,8 +83,7 @@ def wait_for_device(device=None):
                 break
         except:
             time.sleep(1)
-    time.sleep(2)
-    print('Device is ready')
+    time.sleep(1)
 
 
 def subprocess_with_output(command, newlines=True):

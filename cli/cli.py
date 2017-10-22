@@ -153,7 +153,7 @@ def devices(verbose=False):
 @click.option('--device', '-d', default=None, help="Specify which device to run the command on.")
 @click.option('--verbose', is_flag=True, default=False, help="Verbose mode.")
 def root(device, verbose=False):
-    rooter.root(device)
+    rooter.root_device()
 
 
 @click.command(help="Root a running device.", context_settings=dict(
@@ -164,7 +164,7 @@ def root(device, verbose=False):
 @click.option('--all', '-a', is_flag=True, default=False, help="Specify which device to run the command on.")
 @click.option('--verbose', is_flag=True, default=False, help="Verbose mode.")
 def bootstrap(device, all, verbose=False):
-    click.echo(str(crayons.white('Bootstrapping device', bold=True)))
+    click.echo(str(crayons.white('Bootstrapping', bold=True)))
     rooter.bootstrap()
 
 @click.command(help="Reboot device.", context_settings=dict(
@@ -209,9 +209,11 @@ def create(name, codename, proxy, start, root, bootstrap):
     if start:
         avd.run(name, proxy)
         if root:
+            print(crayons.white('Rooting', bold=True))
             rooter.root_device()
         if bootstrap:
-            pass
+            print(crayons.white('Boostrapping', bold=True))
+            rooter.bootstrap()
 
 
 
