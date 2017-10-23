@@ -27,6 +27,7 @@ image_paths = {
     'kitkat': 'system-images;android-19;default;x86',
     'lollipop': 'system-images;android-22;default;x86',
     'marshmallow': 'system-images;android-23;default;x86',
+    'nougat': 'system-images;android-24;default;x86',
 }
 
 

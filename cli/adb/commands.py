@@ -20,7 +20,7 @@ def install(package, device=None, *args, **kwargs):
         res = check_output(
             cmd.split(), universal_newlines=True).splitlines()[-1]
     except Exception as e:
-        raise
+        pass
     else:
         return res
 
@@ -35,6 +35,12 @@ def push(source, dest, device):
     cmd = adb(device) + "push {0} {1}".format(source, dest)
     res = check_output(cmd.split(), universal_newlines=True)
     return res
+
+
+def get_prop(prop, device=None):
+    # ro.build.version.sdk
+    out = check_output(adb(device) + 'shell getprop %s' % prop, shell=True, universal_newlines=True).strip()
+    return out
 
 
 def get_packages(device=None):
