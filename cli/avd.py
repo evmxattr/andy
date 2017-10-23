@@ -58,8 +58,11 @@ def delete():
     print('Wipe user data from AVD')
 
 
-def run(device_name, proxy):
+def run(name, proxy=None, tcpdump=None):
     emulator = shutil.which('emulator')
-    command = '%s -avd %s -writable-system -http-proxy %s &' % (
-        emulator, device_name, proxy)
-    check_call(command, shell=True)
+    command = '%s -avd %s -writable-system ' % (emulator, name)
+    if proxy:
+        command += '-http-proxy %s ' % proxy
+    if tcpdump:
+        command += '-tcpdump %s ' % tcpdump
+    check_call(command + '&', shell=True)

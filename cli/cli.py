@@ -223,10 +223,12 @@ def create(name, codename, proxy, start, root, bootstrap):
 ))
 @click.argument('name', default=None)
 @click.option('--proxy', '-p', default=proxies['privoxy'], help="http proxy.")
-def start(name, proxy):
+@click.option('--tcpdump', '-d', help="Capture network packets to file.")
+def start(name, proxy, tcpdump):
     click.echo(crayons.white(
         "Starting device %s" % name, bold=True))
-    avd.run(name, proxy)
+    print(name, proxy, tcpdump)
+    avd.run(name, proxy, tcpdump)
 
 
 @click.command(help="List AVD.", context_settings=dict(
