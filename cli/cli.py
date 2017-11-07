@@ -47,7 +47,6 @@ def format_help(help):
     help = help.replace('  bootstrap', str(crayons.blue('  bootstrap', bold=True)))
     help = help.replace('  devices', str(crayons.green('  devices', bold=True)))
     help = help.replace('  reboot', str(crayons.yellow('  reboot', bold=True)))
-    help = help.replace('  packages', str(crayons.red('  packages', bold=True)))
     help = help.replace('  pull', str(crayons.blue('  pull', bold=True)))
     help = help.replace('  forward', str(crayons.green('  forward', bold=True)))
 
@@ -93,20 +92,6 @@ def install(package=None, device=None, verbose=False):
 def shell(device):
     click.echo(str(crayons.green("Attaching to a shell", bold=True)))
     commands.shell(device)
-
-
-@click.command(help="List installed packages.", context_settings=dict(
-    ignore_unknown_options=True,
-    allow_extra_args=True
-))
-@click.option('--device', '-d', default=None, help="Specify which device to run the command on.")
-def packages(device):
-    click.echo(str(crayons.green("Installed packages", bold=True)))
-    lines = []
-    for package, location in commands.get_packages(device).items():
-        lines.append('{package}: {location}'.format(
-            package=click.style(str(package), fg='green'), location=location))
-    click.echo_via_pager('\n'.join(lines))
 
 
 @click.command(help="Pull apk from device.", context_settings=dict(
@@ -223,23 +208,37 @@ def create(name, codename, proxy, start, root, bootstrap):
 ))
 @click.argument('name', default=None)
 @click.option('--proxy', '-p', default=proxies['privoxy'], help="http proxy.")
+@click.option('--root', '-r', is_flag=True, default=False, help="Root device when ready.")
 @click.option('--tcpdump', '-d', help="Capture network packets to file.")
-def start(name, proxy, tcpdump):
+def start(name, proxy, root, tcpdump):
     click.echo(crayons.white(
         "Starting device %s" % name, bold=True))
-    print(name, proxy, tcpdump)
     avd.run(name, proxy, tcpdump)
+    if root:
+        print(crayons.white('Rooting', bold=True))
+        rooter.root_device()
 
 
-@click.command(help="List AVD.", context_settings=dict(
+@click.command(name='list', help="List.", context_settings=dict(
     ignore_unknown_options=True,
     allow_extra_args=True
 ))
-def avdlist():
-    click.echo(crayons.white(
-        "Available AVD's", bold=True))
-    for dev in avd.list():
-        click.echo(str(crayons.green(dev)))
+@click.option('--avds', '-a', is_flag=True, help="List available AVD.")
+@click.option('--packages', '-p', is_flag=True, help="List installed packages on a device.")
+@click.option('--device', '-d', default=None, help="Device  name.")
+def listing(avds, packages, device):
+    if avds:
+        click.echo(crayons.white(
+            "Available AVD's", bold=True))
+        for dev in avd.list():
+            click.echo(str(crayons.green(dev)))
+    if packages:
+        click.echo(str(crayons.green("Installed packages", bold=True)))
+        lines = []
+        for package, location in commands.get_packages(device).items():
+            lines.append('{package}: {location}'.format(
+                package=click.style(str(package), fg='green'), location=location))
+        click.echo_via_pager('\n'.join(lines))
 
 
 @click.group(invoke_without_command=True)
@@ -257,12 +256,11 @@ cli.add_command(install)
 cli.add_command(root)
 cli.add_command(create)
 cli.add_command(start)
-cli.add_command(avdlist)
+cli.add_command(listing)
 cli.add_command(shell)
 cli.add_command(bootstrap)
 cli.add_command(devices)
 cli.add_command(reboot)
-cli.add_command(packages)
 cli.add_command(pull)
 cli.add_command(forward)
 

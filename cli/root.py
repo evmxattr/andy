@@ -38,6 +38,12 @@ def install_busybox(device=None):
     check_call(commands.adb(device) + 'shell "cd /system/xbin/ && busybox --install /system/xbin/"', shell=True)
 
 
+def install_frida(device=None):
+    print(crayons.white('Installing Frida', bold=True))
+    commands.push(os.path.join(os.path.expanduser('~/.rooter'), 'binaries/frida/x86/frida-server'), '/data/local/tmp/', device)
+    check_call(commands.adb(device) + 'shell chmod 0755 /data/local/tmp/frida-server', shell=True)
+
+
 def install_apps(device=None):
     print(crayons.white('Installing apps', bold=True))
     for (dirpath, dirnames, filenames) in os.walk(os.path.expanduser('~/.rooter')):
@@ -52,6 +58,7 @@ def install_apps(device=None):
 def bootstrap(device=None):
     commands.wait_for_device()
     install_busybox(device)
+    install_frida(device)
     install_apps(device)
     install_xposed(device)
     print(crayons.white('All done!', bold=True))

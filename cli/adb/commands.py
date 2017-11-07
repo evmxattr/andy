@@ -24,7 +24,6 @@ def install(package, device=None, *args, **kwargs):
     else:
         return res
 
-
 def pull(source, dest, device):
     cmd = adb(device) + "pull {0} {1}".format(source, dest)
     res = check_output(cmd.split(), universal_newlines=True)
