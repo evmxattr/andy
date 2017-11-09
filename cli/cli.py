@@ -193,9 +193,8 @@ def create(name, codename, proxy, start, root, bootstrap):
     avd.create(name, codename)
     if start:
         avd.run(name, proxy)
-        if root:
-            print(crayons.white('Rooting', bold=True))
-            rooter.root_device()
+        print(crayons.white('Rooting', bold=True))
+        rooter.root_device()
         if bootstrap:
             print(crayons.white('Boostrapping', bold=True))
             rooter.bootstrap()
