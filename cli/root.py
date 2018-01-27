@@ -24,11 +24,12 @@ def install_xposed(device=None):
         19: 'xposed.installer_v33_36570c.apk'
     }
     api = int(commands.get_prop('ro.build.version.sdk', device))
-    xposed_dir = 'xposed-v88-sdk%s-x86' % api
     commands.install(os.path.join(os.path.expanduser('~/.rooter'),'framework/xposed/installer/%s' % installer.get(api, 'xposed.installer_3.1.2.apk')), device)
-    commands.push(os.path.join(os.path.expanduser('~/.rooter'), 'framework/xposed/sdk/%s' % xposed_dir), '/data/local/tmp/', device)
-    check_call(commands.adb(device) + 'shell chmod 0755 /data/local/tmp/%s/flash-script.sh' % xposed_dir, shell=True)
-    check_call(commands.adb(device) + 'shell "cd /data/local/tmp/%s/ && ./flash-script.sh"' % xposed_dir, shell=True)
+    if api > 19:
+        xposed_dir = 'xposed-v88-sdk%s-x86' % api
+        commands.push(os.path.join(os.path.expanduser('~/.rooter'), 'framework/xposed/sdk/%s' % xposed_dir), '/data/local/tmp/', device)
+        check_call(commands.adb(device) + 'shell chmod 0755 /data/local/tmp/%s/flash-script.sh' % xposed_dir, shell=True)
+        check_call(commands.adb(device) + 'shell "cd /data/local/tmp/%s/ && ./flash-script.sh"' % xposed_dir, shell=True)
 
 
 def install_busybox(device=None):
@@ -52,7 +53,6 @@ def install_apps(device=None):
             for f in filenames:
                 print(crayons.green('Installing %s' % crayons.white(f, bold=True)))
                 commands.install(os.path.join(dirpath,f), device)
-
 
 
 def bootstrap(device=None):

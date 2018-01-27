@@ -43,24 +43,12 @@ def format_help(help):
     help = help.replace('  create', str(crayons.blue('  create', bold=True)))
     help = help.replace('  start', str(crayons.green('  start', bold=True)))
     help = help.replace('  shell', str(crayons.yellow('  shell', bold=True)))
-    help = help.replace('  avdlist', str(crayons.red('  avdlist', bold=True)))
+    help = help.replace('  list', str(crayons.green('  list', bold=True)))
     help = help.replace('  bootstrap', str(crayons.blue('  bootstrap', bold=True)))
     help = help.replace('  devices', str(crayons.green('  devices', bold=True)))
     help = help.replace('  reboot', str(crayons.yellow('  reboot', bold=True)))
     help = help.replace('  pull', str(crayons.blue('  pull', bold=True)))
     help = help.replace('  forward', str(crayons.green('  forward', bold=True)))
-
-    additional_help = """
-Usage Examples:
-   A:
-   $ {0}
-
-
-Commands:""".format(
-        crayons.red(''),
-    )
-
-    help = help.replace('Commands:', additional_help)
 
     return help
 
@@ -152,6 +140,7 @@ def bootstrap(device, all, verbose=False):
     click.echo(str(crayons.white('Bootstrapping', bold=True)))
     rooter.bootstrap()
 
+
 @click.command(help="Reboot device.", context_settings=dict(
     ignore_unknown_options=True,
     allow_extra_args=True
@@ -185,9 +174,8 @@ def forward(local, remote, device):
 @click.argument('codename', default='kitkat')
 @click.option('--proxy', '-p', default=proxies['privoxy'], help="http proxy.")
 @click.option('--start', '-s', is_flag=True, default=False, help="Start device after creating it.")
-@click.option('--root', '-r', is_flag=True, default=False, help="Root device when ready.")
 @click.option('--bootstrap', '-b', is_flag=True, default=False, help="Bootstrap device when ready.")
-def create(name, codename, proxy, start, root, bootstrap):
+def create(name, codename, proxy, start, bootstrap):
     click.echo(crayons.white(
         "Creating new device {0} [{1}]".format(name, codename), bold=True))
     avd.create(name, codename)
@@ -198,7 +186,6 @@ def create(name, codename, proxy, start, root, bootstrap):
         if bootstrap:
             print(crayons.white('Boostrapping', bold=True))
             rooter.bootstrap()
-
 
 
 @click.command(name='start', help="Start AVD.", context_settings=dict(
