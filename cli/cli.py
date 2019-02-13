@@ -10,10 +10,9 @@ import click
 import click_completion
 import crayons
 import pexpect
-import requests
-import subprocess
 
 from blindspin import spinner
+
 from . import avd
 from . import root as rooter
 from .adb import commands
@@ -152,12 +151,13 @@ def create(name, codename, proxy, start, bootstrap):
         "Creating new device {0} [{1}]".format(name, codename), bold=True))
     avd.create(name, codename)
     if start:
-        avd.run(name, proxy=proxy)
+        dev, port = commands.get_device_tuple()
+        avd.run(name, port=port, proxy=proxy)
         print(crayons.white('Rooting', bold=True))
-        rooter.root_device()
+        rooter.root_device(dev)
         if bootstrap:
             print(crayons.white('Boostrapping', bold=True))
-            rooter.bootstrap()
+            rooter.bootstrap(dev)
 
 
 @click.command(name='start', help="Start AVD.")

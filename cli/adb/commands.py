@@ -77,7 +77,7 @@ def get_device_tuple():
         if 'emulator' in x:
             port = int(x.split('\t')[0].split('-')[1])
             ports.append(port)
-    next_port = max(ports) + 2
+    next_port = max(ports) + 2 if ports else 5554
     return ("emulator-%d" % next_port, next_port)
 
 def wait_for_device(device=None):

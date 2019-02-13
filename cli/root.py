@@ -51,12 +51,12 @@ def install_apps(device=None):
         folder = os.path.basename(dirpath)
         if folder in ['apps', 'hooks']:
             for f in filenames:
-                print(crayons.green('Installing %s' % crayons.white(f, bold=True)))
+                print(crayons.white('Installing %s' % crayons.white(f, bold=True), bold=True))
                 commands.install(os.path.join(dirpath,f), device)
 
 
 def bootstrap(device=None):
-    commands.wait_for_device()
+    commands.wait_for_device(device)
     install_busybox(device)
     install_frida(device)
     install_apps(device)
