@@ -71,6 +71,15 @@ def devices():
     return output
 
 
+def get_device_tuple():
+    ports = []
+    for x in devices().splitlines():
+        if 'emulator' in x:
+            port = int(x.split('\t')[0].split('-')[1])
+            ports.append(port)
+    next_port = max(ports) + 2
+    return ("emulator-%d" % next_port, next_port)
+
 def wait_for_device(device=None):
     import time
     check_output(adb(device) + 'wait-for-device', shell=True)

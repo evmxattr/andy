@@ -7,7 +7,7 @@ from .adb import commands
 
 
 def root_device(device=None):
-    commands.wait_for_device()
+    commands.wait_for_device(device)
     check_call(commands.adb(device) + 'root', universal_newlines=True, shell=True)
     check_call(commands.adb(device) + 'remount', universal_newlines=True, shell=True)
     commands.push(os.path.join(os.path.expanduser('~/.rooter'), 'binaries/su/x86/su.pie'), '/system/xbin/su', device)

@@ -38,13 +38,14 @@ def format_help(help):
     help = help.replace('Usage: rooter', str(
         'Usage: {0}'.format(crayons.white('rooter', bold=True))))
 
-    help = help.replace('  install', str(crayons.yellow('  install', bold=True)))
-    help = help.replace('  root', str(crayons.red('  root', bold=True)))
-    help = help.replace('  create', str(crayons.blue('  create', bold=True)))
+    help = help.replace('  create', str(crayons.green('  create', bold=True)))
     help = help.replace('  start', str(crayons.green('  start', bold=True)))
-    help = help.replace('  shell', str(crayons.yellow('  shell', bold=True)))
-    help = help.replace('  list', str(crayons.green('  list', bold=True)))
+    help = help.replace('  root', str(crayons.red('  root', bold=True)))
     help = help.replace('  bootstrap', str(crayons.blue('  bootstrap', bold=True)))
+    help = help.replace('  install', str(crayons.yellow('  install', bold=True)))
+    help = help.replace('  shell', str(crayons.yellow('  shell', bold=True)))
+    help = help.replace('  emulators', str(crayons.green('  emulators', bold=True)))
+    help = help.replace('  packages', str(crayons.green('  packages', bold=True)))
     help = help.replace('  devices', str(crayons.green('  devices', bold=True)))
     help = help.replace('  reboot', str(crayons.yellow('  reboot', bold=True)))
     help = help.replace('  pull', str(crayons.blue('  pull', bold=True)))
@@ -53,14 +54,10 @@ def format_help(help):
     return help
 
 
-@click.command(help="Installs app on the device.", context_settings=dict(
-    ignore_unknown_options=True,
-    allow_extra_args=True
-))
 @click.argument('package', default=None)
 @click.option('--device', '-d', default=None, help="Specify which device to run the command on.")
-@click.option('--verbose', is_flag=True, default=False, help="Verbose mode.")
-def install(package=None, device=None, verbose=False):
+@click.command(help="Installs app on the device.")
+def install(package=None, device=None):
     name = os.path.basename(package)
     click.echo('Installing package: {}'.format(
         click.style(str(name), fg='green')))
@@ -72,10 +69,7 @@ def install(package=None, device=None, verbose=False):
             str(crayons.red('Unable to install package: {}'.format(res), bold=True)))
 
 
-@click.command(help="Interactive shell.", context_settings=dict(
-    ignore_unknown_options=True,
-    allow_extra_args=True
-))
+@click.command(help="Interactive shell.")
 @click.option('--device', '-d', default=None, help="Specify which device to run the command on.")
 def shell(device):
     click.echo(str(crayons.green("Attaching to a shell", bold=True)))
@@ -107,53 +101,34 @@ def pull(arg, dest, device, package):
             click.echo(crayons.green('Pulled %s from device' % arg))
 
 
-@click.command(help="List attached devices.", context_settings=dict(
-    ignore_unknown_options=True,
-    allow_extra_args=True
-))
-@click.option('--verbose', is_flag=True, default=False, help="Verbose mode.")
-def devices(verbose=False):
+@click.command(help="List attached devices.")
+def devices():
     click.echo(str(crayons.green('Available devices', bold=True)))
     output = commands.devices()
     for line in output.splitlines()[1:]:
         click.echo(line.split('\t')[0])
 
 
-@click.command(help="Root a running device.", context_settings=dict(
-    ignore_unknown_options=True,
-    allow_extra_args=True
-))
+@click.command(help="Root a running device.")
 @click.option('--device', '-d', default=None, help="Specify which device to run the command on.")
-@click.option('--verbose', is_flag=True, default=False, help="Verbose mode.")
-def root(device, verbose=False):
-    rooter.root_device()
+def root(device):
+    rooter.root_device(device)
 
 
-@click.command(help="Root a running device.", context_settings=dict(
-    ignore_unknown_options=True,
-    allow_extra_args=True
-))
+@click.command(help="Bootstrap a running device.")
 @click.option('--device', '-d', default=None, help="Specify which device to run the command on.")
-@click.option('--all', '-a', is_flag=True, default=False, help="Specify which device to run the command on.")
-@click.option('--verbose', is_flag=True, default=False, help="Verbose mode.")
-def bootstrap(device, all, verbose=False):
+def bootstrap(device):
     click.echo(str(crayons.white('Bootstrapping', bold=True)))
-    rooter.bootstrap()
+    rooter.bootstrap(device)
 
 
-@click.command(help="Reboot device.", context_settings=dict(
-    ignore_unknown_options=True,
-    allow_extra_args=True
-))
+@click.command(help="Reboot device.")
 @click.option('--device', '-d', default=None, help="Specify which device to run the command on.")
 def reboot(device):
     commands.reboot(device)
 
 
-@click.command(help="Forward ports.", context_settings=dict(
-    ignore_unknown_options=True,
-    allow_extra_args=True
-))
+@click.command(help="Forward ports.")
 @click.argument('local', default=None)
 @click.argument('remote', default=None)
 @click.option('--device', '-d', default=None, help="Specify which device to run the command on.")
@@ -166,21 +141,18 @@ def forward(local, remote, device):
         click.echo("Unable to forward ports")
 
 
-@click.command(help="Create new AVD.", context_settings=dict(
-    ignore_unknown_options=True,
-    allow_extra_args=True
-))
+@click.command(help="Create new AVD.")
 @click.argument('name', default=None)
 @click.argument('codename', default='kitkat')
 @click.option('--proxy', '-p', default=proxies['privoxy'], help="http proxy.")
-@click.option('--start', '-s', is_flag=True, default=False, help="Start device after creating it.")
+@click.option('--start', '-s', is_flag=True, help="Start device after creating it.")
 @click.option('--bootstrap', '-b', is_flag=True, default=False, help="Bootstrap device when ready.")
 def create(name, codename, proxy, start, bootstrap):
     click.echo(crayons.white(
         "Creating new device {0} [{1}]".format(name, codename), bold=True))
     avd.create(name, codename)
     if start:
-        avd.run(name, proxy)
+        avd.run(name, proxy=proxy)
         print(crayons.white('Rooting', bold=True))
         rooter.root_device()
         if bootstrap:
@@ -188,36 +160,31 @@ def create(name, codename, proxy, start, bootstrap):
             rooter.bootstrap()
 
 
-@click.command(name='start', help="Start AVD.", context_settings=dict(
-    ignore_unknown_options=True,
-    allow_extra_args=True
-))
+@click.command(name='start', help="Start AVD.")
 @click.argument('name', default=None)
 @click.option('--proxy', '-p', default=proxies['privoxy'], help="http proxy.")
-@click.option('--root', '-r', is_flag=True, default=False, help="Root device when ready.")
+@click.option('--root', '-r', is_flag=True, help="Root device when ready.")
 @click.option('--tcpdump', '-d', help="Capture network packets to file.")
 def start(name, proxy, root, tcpdump):
     click.echo(crayons.white(
         "Starting device %s" % name, bold=True))
-    avd.run(name, proxy, tcpdump)
+    dev, port = commands.get_device_tuple()
+    avd.run(name, port=port, proxy=proxy, tcpdump=tcpdump)
     if root:
         print(crayons.white('Rooting', bold=True))
-        rooter.root_device()
+        rooter.root_device(dev)
 
 
-@click.command(name='list', help="List.", context_settings=dict(
-    ignore_unknown_options=True,
-    allow_extra_args=True
-))
-@click.option('--avds', '-a', is_flag=True, help="List available AVD.")
-@click.option('--packages', '-p', is_flag=True, help="List installed packages on a device.")
+@click.command(name='emulators', help="List available emulators")
+def emulators():
+    click.echo(crayons.white("Available AVD's", bold=True))
+    for dev in avd.list():
+        click.echo(str(crayons.green(dev)))
+
+
+@click.command(name='packages', help="List installed packages.")
 @click.option('--device', '-d', default=None, help="Device  name.")
-def listing(avds, packages, device):
-    if avds:
-        click.echo(crayons.white(
-            "Available AVD's", bold=True))
-        for dev in avd.list():
-            click.echo(str(crayons.green(dev)))
+def packages(device):
     if packages:
         click.echo(str(crayons.green("Installed packages", bold=True)))
         lines = []
@@ -238,13 +205,14 @@ def cli(ctx, help=False):
         click.echo(format_help(ctx.get_help()))
 
 
-cli.add_command(install)
-cli.add_command(root)
 cli.add_command(create)
 cli.add_command(start)
-cli.add_command(listing)
-cli.add_command(shell)
+cli.add_command(root)
 cli.add_command(bootstrap)
+cli.add_command(install)
+cli.add_command(packages)
+cli.add_command(emulators)
+cli.add_command(shell)
 cli.add_command(devices)
 cli.add_command(reboot)
 cli.add_command(pull)
