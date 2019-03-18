@@ -62,3 +62,11 @@ def bootstrap(device=None):
     install_apps(device)
     install_xposed(device)
     print(crayons.white('All done!', bold=True))
+
+
+def start_frida(device=None):
+    check_call(commands.adb(device) + 'shell ./data/local/tmp/frida-server -D', shell=True)
+
+
+def stop_frida(device=None):
+    check_call(commands.adb(device) + 'shell pkill frida-server', shell=True)

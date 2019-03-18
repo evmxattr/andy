@@ -50,12 +50,11 @@ def list():
     return [n.replace('Name:', '').strip() for n in out if 'Name:' in n]
 
 
-def delete():
+def delete_avd(name):
     print('Delete AVD')
+    command = shutil.which('avdmanager') + ' delete avd --name %s' % name
+    return 'deleted' in check_output(command.split(), universal_newlines=True)
 
-
-def delete():
-    print('Wipe user data from AVD')
 
 
 def run(name, port, proxy=None, tcpdump=None):

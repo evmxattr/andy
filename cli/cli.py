@@ -38,6 +38,7 @@ def format_help(help):
         'Usage: {0}'.format(crayons.white('rooter', bold=True))))
 
     help = help.replace('  create', str(crayons.green('  create', bold=True)))
+    help = help.replace('  delete', str(crayons.red('  delete', bold=True)))
     help = help.replace('  start', str(crayons.green('  start', bold=True)))
     help = help.replace('  root', str(crayons.red('  root', bold=True)))
     help = help.replace('  bootstrap', str(crayons.blue('  bootstrap', bold=True)))
@@ -49,6 +50,7 @@ def format_help(help):
     help = help.replace('  reboot', str(crayons.yellow('  reboot', bold=True)))
     help = help.replace('  pull', str(crayons.blue('  pull', bold=True)))
     help = help.replace('  forward', str(crayons.green('  forward', bold=True)))
+    help = help.replace('  frida', str(crayons.red('  frida', bold=True)))
 
     return help
 
@@ -127,6 +129,17 @@ def reboot(device):
     commands.reboot(device)
 
 
+@click.command(help="Start/stop frida server.")
+@click.option('--device', '-d', default=None, help="Specify which device to run the command on.")
+@click.option('--kill', '-k', is_flag=True, help="Kill running frida server.")
+def frida(device, kill):
+    if not kill:
+        click.echo(str(crayons.white('Starting frida server', bold=True)))
+        rooter.start_frida(device)
+    else:
+        rooter.stop_frida(device)
+
+
 @click.command(help="Forward ports.")
 @click.argument('local', default=None)
 @click.argument('remote', default=None)
@@ -181,6 +194,14 @@ def emulators():
     for dev in avd.list():
         click.echo(str(crayons.green(dev)))
 
+@click.command(name='delete', help="Delete emulator")
+@click.argument('name')
+def delete(name):
+        click.echo(crayons.white("Deleting AVD %s" % name, bold=True))
+        if avd.delete_avd(name):
+            click.echo(crayons.green('Success!'))
+        else:
+            click.echo(crayons.red('Unable to delete AVD'))
 
 @click.command(name='packages', help="List installed packages.")
 @click.option('--device', '-d', default=None, help="Device  name.")
@@ -206,6 +227,7 @@ def cli(ctx, help=False):
 
 
 cli.add_command(create)
+cli.add_command(delete)
 cli.add_command(start)
 cli.add_command(root)
 cli.add_command(bootstrap)
@@ -217,6 +239,7 @@ cli.add_command(devices)
 cli.add_command(reboot)
 cli.add_command(pull)
 cli.add_command(forward)
+cli.add_command(frida)
 
 
 if __name__ == '__main__':

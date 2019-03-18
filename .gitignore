@@ -3,6 +3,7 @@
 __pycache__/
 .cache
 pipenv.egg-info/
+*.egg-info/
 *.swp
 docs/_build
 dist
