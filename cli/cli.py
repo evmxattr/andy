@@ -34,8 +34,8 @@ def format_help(help):
     """Formats the help string."""
     help = help.replace('Options:', str(crayons.white('Options:', bold=True)))
 
-    help = help.replace('Usage: rooter', str(
-        'Usage: {0}'.format(crayons.white('rooter', bold=True))))
+    help = help.replace('Usage: andy', str(
+        'Usage: {0}'.format(crayons.white('andy', bold=True))))
 
     help = help.replace('  create', str(crayons.green('  create', bold=True)))
     help = help.replace('  delete', str(crayons.red('  delete', bold=True)))

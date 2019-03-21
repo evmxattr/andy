@@ -20,7 +20,7 @@ with open(os.path.join(here, 'cli', "__version__.py")) as f:
 required = []
 
 setup(
-    name='rooter',
+    name='andy',
     version=about['__version__'],
     description='.',
     long_description=long_description,
@@ -29,7 +29,7 @@ setup(
     url='https://github.com/',
     packages=find_packages(exclude=['tests', 'tests_windows']),
     entry_points={
-        'console_scripts': ['rooter=cli:cli'],
+        'console_scripts': ['andy=cli:cli'],
     },
     install_requires=required,
     include_package_data=True,
