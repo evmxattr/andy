@@ -1,4 +1,8 @@
 import shutil
+import pexpect
+
+from os.path import expanduser
+from contextlib import contextmanager
 from subprocess import check_call, check_output
 
 
@@ -103,3 +107,19 @@ def wait_for_device(device=None):
 def subprocess_with_output(command, newlines=True):
     with spinner():
         return check_output(command, universal_newlines=newlines)
+
+
+@contextmanager
+def console(*args, **kwds):
+    auth_token = None
+    with open(expanduser("~/.emulator_console_auth_token")) as f:
+        auth_token = f.readline()
+    assert auth_token, "No auth token found"
+    try:
+        connection = pexpect.spawn("telnet localhost 5554")
+        connection.expect("OK")
+        connection.sendline("auth %s" % auth_token)
+        connection.expect("OK")
+        yield connection
+    finally:
+        connection.sendline("exit")

@@ -51,6 +51,7 @@ def format_help(help):
     help = help.replace('  pull', str(crayons.blue('  pull', bold=True)))
     help = help.replace('  forward', str(crayons.green('  forward', bold=True)))
     help = help.replace('  frida', str(crayons.red('  frida', bold=True)))
+    help = help.replace('  console', str(crayons.blue('  console', bold=True)))
 
     return help
 
@@ -194,6 +195,7 @@ def emulators():
     for dev in avd.list():
         click.echo(str(crayons.green(dev)))
 
+
 @click.command(name='delete', help="Delete emulator")
 @click.argument('name')
 def delete(name):
@@ -203,8 +205,9 @@ def delete(name):
         else:
             click.echo(crayons.red('Unable to delete AVD'))
 
+
 @click.command(name='packages', help="List installed packages.")
-@click.option('--device', '-d', default=None, help="Device  name.")
+@click.option('--device', '-d', default=None, help="Device name.")
 def packages(device):
     if packages:
         click.echo(str(crayons.green("Installed packages", bold=True)))
@@ -215,12 +218,50 @@ def packages(device):
         click.echo_via_pager('\n'.join(lines))
 
 
+@click.group(help="Console commands (sms, call, geo ...)")
+@click.option('--device', '-d', default=None, help="Device name.")
+@click.pass_context
+def console(ctx, device):
+    ctx.ensure_object(dict)
+    ctx.obj['device'] = device
+
+
+@console.command()
+@click.argument('phonenumber', default=None)
+@click.argument('message', default=None)
+@click.pass_context
+def sms(ctx, phonenumber, message):
+    with commands.console(ctx.obj['device']) as console:
+        console.sendline("sms send %s %s" %(phonenumber, message))
+
+
+@console.command()
+@click.argument('phonenumber', default=None)
+@click.pass_context
+def call(ctx, phonenumber):
+    with commands.console(ctx.obj['device']) as console:
+        console.sendline("gsm call %s" % phonenumber)
+
+
+@console.command()
+@click.argument('latitude', default=None)
+@click.argument('longitude', default=None)
+@click.argument('satellites', default=8)
+@click.argument('altitude', default=10)
+@click.argument('velocity', default=2)
+@click.pass_context
+def geo(ctx, **kwds):
+    # andy telnet geo 68,9597495 33,0716778
+    with commands.console(ctx.obj['device']) as console:
+        console.sendline(
+            "geo fix {longitude} {latitude} {altitude} {satellites} {velocity}".format(**kwds))
+
+
 @click.group(invoke_without_command=True)
 @click.option('--help', '-h', is_flag=True, default=None, help="Show this message then exit.")
 @click.version_option(prog_name=crayons.yellow('rooter'), version=__version__)
 @click.pass_context
 def cli(ctx, help=False):
-
     if ctx.invoked_subcommand is None:
         click.echo(crayons.white(splash, bold=True))
         click.echo(format_help(ctx.get_help()))
@@ -240,7 +281,7 @@ cli.add_command(reboot)
 cli.add_command(pull)
 cli.add_command(forward)
 cli.add_command(frida)
-
+cli.add_command(console)
 
 if __name__ == '__main__':
     cli()
