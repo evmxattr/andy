@@ -18,6 +18,16 @@ def shell(device):
     check_call(cmd.split())
 
 
+def tap(device, x, y):
+    cmd = adb(device) + 'shell input tap %s %s' % (x, y)
+    check_call(cmd.split())
+
+
+def text(device, string):
+    cmd = adb(device) + 'shell input text %s' % string
+    check_call(cmd.split())
+
+
 def install(package, device=None, *args, **kwargs):
     cmd = adb(device) + 'install %s' % package  # -l -r -t -s -d -p -g
     try:
@@ -83,6 +93,7 @@ def get_device_tuple():
             ports.append(port)
     next_port = max(ports) + 2 if ports else 5554
     return ("emulator-%d" % next_port, next_port)
+
 
 def wait_for_device(device=None):
     import time

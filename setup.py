@@ -4,6 +4,7 @@
 import codecs
 import os
 import sys
+
 from shutil import rmtree
 
 from setuptools import find_packages, setup, Command
@@ -17,7 +18,21 @@ about = {}
 with open(os.path.join(here, 'cli', "__version__.py")) as f:
     exec(f.read(), about)
 
-required = []
+required = [
+    "crayons",
+    "requests",
+    "pexpect",
+    "blindspin",
+]
+
+_TEST_REQUIRE = [
+    "pytest==4.1.1",
+    "pytest-cov==2.6.1",
+    "pytest-asyncio==0.10.0",
+    "pylint==2.3.0",
+    "black==18.9b0",
+    "isort==4.3.4",
+]
 
 setup(
     name='andy',
@@ -32,6 +47,8 @@ setup(
         'console_scripts': ['andy=cli:cli'],
     },
     install_requires=required,
+    tests_require=_TEST_REQUIRE,
+    extras_require={"test": _TEST_REQUIRE},
     include_package_data=True,
     license='MIT',
     classifiers=[

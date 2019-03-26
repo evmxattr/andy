@@ -26,7 +26,14 @@ proxies = {
 
 
 splash = """
-
+                    _       
+    /\             | |      
+   /  \   _ __   __| |_   _ 
+  / /\ \ | '_ \ / _` | | | |
+ / ____ \| | | | (_| | |_| |
+/_/    \_\_| |_|\__,_|\__, |
+                       __/ |
+                      |___/ 
 """
 
 
@@ -52,6 +59,7 @@ def format_help(help):
     help = help.replace('  forward', str(crayons.green('  forward', bold=True)))
     help = help.replace('  frida', str(crayons.red('  frida', bold=True)))
     help = help.replace('  console', str(crayons.blue('  console', bold=True)))
+    help = help.replace('  input', str(crayons.blue('  input', bold=True)))
 
     return help
 
@@ -59,7 +67,7 @@ def format_help(help):
 @click.argument('package', default=None)
 @click.option('--device', '-d', default=None, help="Specify which device to run the command on.")
 @click.command(help="Installs app on the device.")
-def install(package=None, device=None):
+def install(device, package):
     name = os.path.basename(package)
     click.echo('Installing package: {}'.format(
         click.style(str(name), fg='green')))
@@ -71,7 +79,7 @@ def install(package=None, device=None):
             str(crayons.red('Unable to install package: {}'.format(res), bold=True)))
 
 
-@click.command(help="Interactive shell.")
+@click.command(help="Run interactive shell.")
 @click.option('--device', '-d', default=None, help="Specify which device to run the command on.")
 def shell(device):
     click.echo(str(crayons.green("Attaching to a shell", bold=True)))
@@ -132,9 +140,9 @@ def reboot(device):
 
 @click.command(help="Start/stop frida server.")
 @click.option('--device', '-d', default=None, help="Specify which device to run the command on.")
-@click.option('--kill', '-k', is_flag=True, help="Kill running frida server.")
-def frida(device, kill):
-    if not kill:
+@click.option('--stop', '-s', is_flag=True, help="Kill running frida server.")
+def frida(device, stop):
+    if not stop:
         click.echo(str(crayons.white('Starting frida server', bold=True)))
         rooter.start_frida(device)
     else:
@@ -156,15 +164,15 @@ def forward(local, remote, device):
 
 @click.command(help="Create new AVD.")
 @click.argument('name', default=None)
-@click.argument('codename', default='kitkat')
+@click.option('--target', '-t', default="kitkat", help="kitkat, marshmallow, lollipop.")
 @click.option('--proxy', '-p', default=proxies['privoxy'], help="http proxy.")
 @click.option('--start', '-s', is_flag=True, help="Start device after creating it.")
-@click.option('--bootstrap', '-b', is_flag=True, default=False, help="Bootstrap device when ready.")
-def create(name, codename, proxy, start, bootstrap):
+@click.option('--bootstrap', '-b', is_flag=True, help="Bootstrap device when ready.")
+def create(name, target, proxy, start, bootstrap):
     click.echo(crayons.white(
-        "Creating new device {0} [{1}]".format(name, codename), bold=True))
-    avd.create(name, codename)
-    if start:
+        "Creating new device {0} [{1}]".format(name, target), bold=True))
+    avd.create(name, target)
+    if start or bootstrap:
         dev, port = commands.get_device_tuple()
         avd.run(name, port=port, proxy=proxy)
         print(crayons.white('Rooting', bold=True))
@@ -183,20 +191,21 @@ def start(name, proxy, root, tcpdump):
     click.echo(crayons.white(
         "Starting device %s" % name, bold=True))
     dev, port = commands.get_device_tuple()
+    proxy = proxies.get(proxy, proxy)
     avd.run(name, port=port, proxy=proxy, tcpdump=tcpdump)
     if root:
         print(crayons.white('Rooting', bold=True))
         rooter.root_device(dev)
 
 
-@click.command(name='emulators', help="List available emulators")
+@click.command(name='emulators', help="List available emulators.")
 def emulators():
     click.echo(crayons.white("Available AVD's", bold=True))
-    for dev in avd.list():
+    for dev in avd.list_avd():
         click.echo(str(crayons.green(dev)))
 
 
-@click.command(name='delete', help="Delete emulator")
+@click.command(name='delete', help="Delete emulator.")
 @click.argument('name')
 def delete(name):
         click.echo(crayons.white("Deleting AVD %s" % name, bold=True))
@@ -218,7 +227,7 @@ def packages(device):
         click.echo_via_pager('\n'.join(lines))
 
 
-@click.group(help="Console commands (sms, call, geo ...)")
+@click.group(help="Console commands (sms, call, geo).")
 @click.option('--device', '-d', default=None, help="Device name.")
 @click.pass_context
 def console(ctx, device):
@@ -257,6 +266,29 @@ def geo(ctx, **kwds):
             "geo fix {longitude} {latitude} {altitude} {satellites} {velocity}".format(**kwds))
 
 
+@click.group(help="Input commands (text, keyevent, tap, swipe, press).")
+@click.option('--device', '-d', default=None, help="Device name.")
+@click.pass_context
+def input(ctx, device):
+    ctx.ensure_object(dict)
+    ctx.obj['device'] = device
+
+
+@input.command()
+@click.argument('x')
+@click.argument('y')
+@click.pass_context
+def tap(ctx, **kwds):
+    commands.tap(ctx.obj['device'], **kwds)
+
+
+@input.command()
+@click.argument('string')
+@click.pass_context
+def text(ctx, **kwds):
+    commands.text(ctx.obj['device'], **kwds)
+
+
 @click.group(invoke_without_command=True)
 @click.option('--help', '-h', is_flag=True, default=None, help="Show this message then exit.")
 @click.version_option(prog_name=crayons.yellow('rooter'), version=__version__)
@@ -282,6 +314,7 @@ cli.add_command(pull)
 cli.add_command(forward)
 cli.add_command(frida)
 cli.add_command(console)
+cli.add_command(input)
 
 if __name__ == '__main__':
     cli()

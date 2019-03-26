@@ -7,7 +7,6 @@ verify_ssl = true
 crayons = "*"
 requests = "*"
 pexpect = "*"
-click-completion = "*"
 blindspin = "*"
 ipython = "*"
 

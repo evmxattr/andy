@@ -44,7 +44,7 @@ def create(name, codename):
     patch_config(name)
 
 
-def list():
+def list_avd():
     command = shutil.which('avdmanager') + ' list avd'
     out = check_output(command.split(), universal_newlines=True).splitlines()
     return [n.replace('Name:', '').strip() for n in out if 'Name:' in n]
@@ -54,7 +54,6 @@ def delete_avd(name):
     print('Delete AVD')
     command = shutil.which('avdmanager') + ' delete avd --name %s' % name
     return 'deleted' in check_output(command.split(), universal_newlines=True)
-
 
 
 def run(name, port, proxy=None, tcpdump=None):
