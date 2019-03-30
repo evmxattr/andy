@@ -21,7 +21,8 @@ from .__version__ import __version__
 
 proxies = {
     'privoxy': 'http://127.0.0.1:8118',
-    'mitmproxy': 'http://127.0.0.1:8080'
+    'mitmproxy': 'http://127.0.0.1:8080',
+    'burp': 'http://127.0.0.1:8080'
 }
 
 
@@ -60,6 +61,7 @@ def format_help(help):
     help = help.replace('  frida', str(crayons.red('  frida', bold=True)))
     help = help.replace('  console', str(crayons.blue('  console', bold=True)))
     help = help.replace('  input', str(crayons.blue('  input', bold=True)))
+    help = help.replace('  setup', str(crayons.green('  setup', bold=True)))
 
     return help
 
@@ -86,10 +88,7 @@ def shell(device):
     commands.shell(device)
 
 
-@click.command(help="Pull apk from device.", context_settings=dict(
-    ignore_unknown_options=True,
-    allow_extra_args=True
-))
+@click.command(help="Pull apk from device.")
 @click.argument('arg', default=None)
 @click.argument('dest', default=None)
 @click.option('--device', '-d', default=None, help="Specify which device to run the command on.")
@@ -289,6 +288,33 @@ def text(ctx, **kwds):
     commands.text(ctx.obj['device'], **kwds)
 
 
+@click.command(name='setup', help="Install dependencies (Xposed, Frida, Busybox, SU).")
+def setup():
+
+    import zipfile
+
+    ok = True
+    click.echo(crayons.white("Installing dependencies" , bold=True))
+    with zipfile.ZipFile("./deps.zip","r") as zip_ref:
+        zip_ref.extractall(os.path.expanduser('~/.andy'))
+
+    click.echo(crayons.white("Checking if Android SDK environment variable exist" , bold=True))
+    if not os.environ.get('ANDROID_SDK_ROOT'):
+        ok = False
+        click.echo(crayons.red("ANDROID_SDK_ROOT environment variable not set", bold=True))
+
+    click.echo(crayons.white("Checking if necessary apps are available" , bold=True))    
+    for prog in ['avdmanager', 'emulator', 'adb']:
+        if not shutil.which(prog):
+            ok = False
+            click.echo(crayons.red('%s not found in path' %prog, bold=True))
+
+    if ok:
+        click.echo(crayons.green("All done!", bold=True))
+    else:
+        click.echo(crayons.yellow("Please fix above errors before continuing", bold=True))
+
+
 @click.group(invoke_without_command=True)
 @click.option('--help', '-h', is_flag=True, default=None, help="Show this message then exit.")
 @click.version_option(prog_name=crayons.yellow('rooter'), version=__version__)
@@ -315,6 +341,7 @@ cli.add_command(forward)
 cli.add_command(frida)
 cli.add_command(console)
 cli.add_command(input)
+cli.add_command(setup)
 
 if __name__ == '__main__':
     cli()

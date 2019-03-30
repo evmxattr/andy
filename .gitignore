@@ -9,5 +9,6 @@ docs/_build
 dist
 build
 .DS_Store
+.vscode/
 test_project
 Pipfile.lock
